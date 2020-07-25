@@ -4,7 +4,7 @@ import express, { Request, Response } from "express";
 const app = express()
 
 
-const persons = [{
+let persons = [{
     name: "Arto Hellas",
     number: "040-123456",
     id: "1"
@@ -25,6 +25,17 @@ app.get("/api/persons/:id", (req: Request, res: Response) => {
     if (person) {
         res.json(person);
     } else {
+        res.status(404).end()
+    }
+})
+
+app.delete("/api/persons/:id", (req: Request, res: Response) => {
+    const indexOfPersonToDelete = persons.findIndex(person => person.id === req.params.id)
+    if (indexOfPersonToDelete > -1) {
+        persons.splice(indexOfPersonToDelete, 1)
+        res.status(204).end()
+    }
+    else {
         res.status(404).end()
     }
 })
