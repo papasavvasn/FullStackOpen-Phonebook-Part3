@@ -3,8 +3,17 @@
 import express, { Request, Response } from "express";
 const app = express()
 
+// the use of json parser gives us access to request.body
+app.use(express.json())
 
-let persons = [{
+
+interface Person {
+    name: string
+    number: string
+    id?: string
+}
+
+let persons: Person[] = [{
     name: "Arto Hellas",
     number: "040-123456",
     id: "1"
@@ -44,6 +53,11 @@ app.get("/api/persons", (req: Request, res: Response) => {
     res.json(persons);
 })
 
+app.post("/api/persons", (req: Request, res: Response) => {
+    const newPerson = { ...req.body, id: Math.floor(1000 * Math.random()) }
+    persons.push(newPerson)
+    res.json(newPerson)
+})
 
 app.get("/info", (req: Request, res: Response) => {
     res.send(`PhoneBook has info for ${persons.length} people
