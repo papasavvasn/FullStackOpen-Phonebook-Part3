@@ -32,9 +32,9 @@ let persons: Person[] = [{
 app.get("/api/persons/:id", (req: Request, res: Response) => {
     const person = persons.find(person => person.id === req.params.id)
     if (person) {
-        res.json(person);
+        return res.json(person);
     } else {
-        res.status(404).end()
+        return res.status(404).end()
     }
 })
 
@@ -42,25 +42,35 @@ app.delete("/api/persons/:id", (req: Request, res: Response) => {
     const indexOfPersonToDelete = persons.findIndex(person => person.id === req.params.id)
     if (indexOfPersonToDelete > -1) {
         persons.splice(indexOfPersonToDelete, 1)
-        res.status(204).end()
+        return res.status(204).end()
     }
     else {
-        res.status(404).end()
+        return res.status(404).end()
     }
 })
 
 app.get("/api/persons", (req: Request, res: Response) => {
-    res.json(persons);
+    return res.json(persons);
 })
 
 app.post("/api/persons", (req: Request, res: Response) => {
-    const newPerson = { ...req.body, id: Math.floor(1000 * Math.random()) }
-    persons.push(newPerson)
-    res.json(newPerson)
+    if (!req.body.name || !req.body.number) {
+        return res.status(400).json({
+            error: 'name or number missing'
+        })
+    } else if (persons.find(person => person.name === req.body.name)) {
+        return res.status(400).json({
+            error: `A person with the name ${req.body.name} already exists in our database`
+        })
+    } else {
+        const newPerson = { ...req.body, id: Math.floor(1000 * Math.random()) }
+        persons.push(newPerson)
+        return res.json(newPerson)
+    }
 })
 
 app.get("/info", (req: Request, res: Response) => {
-    res.send(`PhoneBook has info for ${persons.length} people
+    return res.send(`PhoneBook has info for ${persons.length} people
                 
 ${new Date()}`)
 })
