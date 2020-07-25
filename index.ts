@@ -1,10 +1,12 @@
 //https://dev.to/aryanshmahato/setup-node-express-with-typescript-3bho
-
 import express, { Request, Response } from "express";
+import morgan from "morgan"
+
 const app = express()
 
 // the use of json parser gives us access to request.body
 app.use(express.json())
+app.use(morgan('tiny'))
 
 
 interface Person {
