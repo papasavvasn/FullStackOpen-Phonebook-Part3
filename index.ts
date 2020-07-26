@@ -1,8 +1,10 @@
 //https://dev.to/aryanshmahato/setup-node-express-with-typescript-3bho
 import express, { Request, Response } from "express";
-import morgan from "morgan"
+import morgan from "morgan";
+import cors from "cors";
 
 const app = express()
+app.use(cors())
 
 // the use of json parser gives us access to request.body
 app.use(express.json())
