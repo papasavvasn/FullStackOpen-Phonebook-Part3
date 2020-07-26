@@ -76,7 +76,7 @@ app.post("/api/persons", (req: Request, res: Response) => {
             error: `A person with the name ${req.body.name} already exists in our database`
         })
     } else {
-        const newPerson = { ...req.body, id: Math.floor(1000 * Math.random()) }
+        const newPerson = { ...req.body, id: Math.floor(1000 * Math.random()) + "" }
         persons.push(newPerson)
         return res.json(newPerson)
     }
@@ -88,6 +88,7 @@ app.get("/info", (req: Request, res: Response) => {
 ${new Date()}`)
 })
 
-app.listen(3001, () => {
+const PORT = process.env.PORT || 3001
+app.listen(PORT, () => {
     console.log('Server Started at Port, 3001')
 })
