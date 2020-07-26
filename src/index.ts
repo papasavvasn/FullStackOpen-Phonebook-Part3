@@ -1,5 +1,6 @@
 //https://dev.to/aryanshmahato/setup-node-express-with-typescript-3bho
 import express, { Request, Response } from "express";
+import path from 'path';
 import morgan from "morgan";
 import cors from "cors";
 
@@ -8,6 +9,16 @@ app.use(cors())
 
 // the use of json parser gives us access to request.body
 app.use(express.json())
+
+
+// https://create-react-app.dev/docs/deployment/
+// serve static files
+app.use(express.static(path.join(__dirname, '../build_client')));
+
+app.get('/', function (req, res) {
+    res.sendFile(path.join(__dirname, '../build_client', 'index.html'));
+});
+
 app.use(morgan(function (tokens, req, res) {
     return [
         tokens.method(req, res),

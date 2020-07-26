@@ -16,12 +16,19 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 //https://dev.to/aryanshmahato/setup-node-express-with-typescript-3bho
 var express_1 = __importDefault(require("express"));
+var path_1 = __importDefault(require("path"));
 var morgan_1 = __importDefault(require("morgan"));
 var cors_1 = __importDefault(require("cors"));
 var app = express_1.default();
 app.use(cors_1.default());
 // the use of json parser gives us access to request.body
 app.use(express_1.default.json());
+// https://create-react-app.dev/docs/deployment/
+// serve static files
+app.use(express_1.default.static(path_1.default.join(__dirname, '../build_client')));
+app.get('/', function (req, res) {
+    res.sendFile(path_1.default.join(__dirname, '../build_client', 'index.html'));
+});
 app.use(morgan_1.default(function (tokens, req, res) {
     return [
         tokens.method(req, res),
@@ -81,7 +88,7 @@ app.post("/api/persons", function (req, res) {
         });
     }
     else {
-        var newPerson = __assign(__assign({}, req.body), { id: Math.floor(1000 * Math.random()) });
+        var newPerson = __assign(__assign({}, req.body), { id: Math.floor(1000 * Math.random()) + "" });
         persons.push(newPerson);
         return res.json(newPerson);
     }
