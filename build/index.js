@@ -9,16 +9,15 @@ var express_1 = __importDefault(require("express"));
 var path_1 = __importDefault(require("path"));
 var morgan_1 = __importDefault(require("morgan"));
 var cors_1 = __importDefault(require("cors"));
-var mongoose_1 = __importDefault(require("mongoose"));
-var Person = require("./models/person");
+var person_1 = __importDefault(require("./models/person"));
 var app = express_1.default();
 app.use(cors_1.default());
-// the use of json parser gives us access to request.body
-app.use(express_1.default.json());
 // https://create-react-app.dev/docs/deployment/
 // serve static files
 app.use(express_1.default.static(path_1.default.join(__dirname, '../build_client')));
-app.get('/', function (req, res) {
+// the use of json parser gives us access to request.body
+app.use(express_1.default.json());
+app.get('/', function (_, res) {
     res.sendFile(path_1.default.join(__dirname, '../build_client', 'index.html'));
 });
 app.use(morgan_1.default(function (tokens, req, res) {
@@ -31,26 +30,29 @@ app.use(morgan_1.default(function (tokens, req, res) {
         JSON.stringify(req.body)
     ].join(' ');
 }));
-app.get("/api/persons/:id", function (req, res) {
-    Person.findById(req.params.id).then(function (person) {
-        res.json(person);
-    });
+// TODO https://medium.com/@tomanagle/strongly-typed-models-with-mongoose-and-typescript-7bc2f7197722
+// add types to the db response
+app.get("/api/persons/:id", function (req, res, next) {
+    person_1.default.findById(req.params.id).then(function (person) {
+        if (person) {
+            res.json(person);
+        }
+        else {
+            res.status(404).end();
+        }
+    }).catch(function (error) { return next(error); });
 });
-// app.delete("/api/persons/:id", (req: Request, res: Response) => {
-//     const indexOfPersonToDelete = persons.findIndex(person => person.id === req.params.id)
-//     if (indexOfPersonToDelete > -1) {
-//         persons.splice(indexOfPersonToDelete, 1)
-//         return res.status(204).end()
-//     }
-//     else {
-//         return res.status(404).end()
-//     }
-// })
+app.delete('/api/persons/:id', function (req, res, next) {
+    person_1.default.findByIdAndRemove(req.params.id)
+        .then(function (person) {
+        res.status(204).end();
+    })
+        .catch(function (error) { return next(error); });
+});
 app.get("/api/persons", function (req, res) {
-    Person.find({}).then(function (persons) {
+    person_1.default.find({}).then(function (persons) {
         console.log(persons);
         res.json(persons);
-        mongoose_1.default.connection.close();
     });
 });
 app.post("/api/persons", function (req, res) {
@@ -60,7 +62,7 @@ app.post("/api/persons", function (req, res) {
         });
     }
     else {
-        var person = new Person({
+        var person = new person_1.default({
             name: req.body.name,
             number: req.body.number
         });
@@ -69,10 +71,31 @@ app.post("/api/persons", function (req, res) {
         });
     }
 });
-// app.get("/info", (req: Request, res: Response) => {
-//     return res.send(`PhoneBook has info for ${persons.length} people
-// ${new Date()}`)
-// })
+app.put('/api/persons/:id', function (req, res, next) {
+    var person = { name: req.body.name, number: req.body.number };
+    person_1.default.findByIdAndUpdate(req.params.id, person, { new: true })
+        .then(function (updatedPerson) {
+        console.log("updatedPerson is", updatedPerson);
+        res.json(updatedPerson);
+    })
+        .catch(function (error) { return next(error); });
+});
+app.get("/info", function (_, res) {
+    person_1.default.find({}).then(function (persons) { return res.send("PhoneBook has info for " + persons.length + " people"); });
+});
+var unknownEndpoint = function (_, res) {
+    res.status(404).send({ error: 'unknown endpoint' });
+};
+// handler of requests with unknown endpoint
+app.use(unknownEndpoint);
+var errorHandler = function (error, _, response, next) {
+    console.error(error.message);
+    if (error.name === 'CastError') {
+        return response.status(400).send({ error: 'malformatted id' });
+    }
+    next(error);
+};
+app.use(errorHandler);
 var PORT = process.env.PORT;
 app.listen(PORT, function () {
     console.log('Server Started at Port, 3001');

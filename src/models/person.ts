@@ -1,10 +1,11 @@
 // with this tsconfig all the folders should be inside the src folder
 require('dotenv').config()
 import mongoose from "mongoose";
+mongoose.set('useFindAndModify', false)
 
 const url = process.env.MONGODB_URI as string
 
-console.log('connecting to', url)
+console.log("url is", url)
 
 mongoose.connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(result => {

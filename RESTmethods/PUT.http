@@ -1,0 +1,7 @@
+PUT https://fullstack-open-part-3.herokuapp.com/api/persons/5f257930c3d58600172fcaa5
+Content-Type: application/json
+
+{
+    "name": "Nikos Papadopoulos",
+    "number": "040-23456792"
+}

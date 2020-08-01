@@ -1,28 +1,26 @@
 //https://dev.to/aryanshmahato/setup-node-express-with-typescript-3bho
 require('dotenv').config()
-import express, { Request, Response } from "express";
+import express, { Request, Response, NextFunction } from "express";
 import path from 'path';
 import morgan from "morgan";
 import cors from "cors";
-
 import Person from "./models/person"
 
 const app = express()
 app.use(cors())
 
-// the use of json parser gives us access to request.body
-app.use(express.json())
-
-
 // https://create-react-app.dev/docs/deployment/
 // serve static files
 app.use(express.static(path.join(__dirname, '../build_client')));
 
-app.get('/', function (req, res) {
+// the use of json parser gives us access to request.body
+app.use(express.json())
+
+app.get('/', function (_: Request, res: Response) {
     res.sendFile(path.join(__dirname, '../build_client', 'index.html'));
 });
 
-app.use(morgan(function (tokens, req, res) {
+app.use(morgan(function (tokens, req: Request, res: Response) {
     return [
         tokens.method(req, res),
         tokens.url(req, res),
@@ -36,26 +34,23 @@ app.use(morgan(function (tokens, req, res) {
 
 // TODO https://medium.com/@tomanagle/strongly-typed-models-with-mongoose-and-typescript-7bc2f7197722
 // add types to the db response
-app.get("/api/persons/:id", (req: Request, res: Response) => {
+app.get("/api/persons/:id", (req: Request, res: Response, next: NextFunction) => {
     Person.findById(req.params.id).then(person => {
-        res.json(person)
-    })
-
+        if (person) {
+            res.json(person)
+        } else {
+            res.status(404).end()
+        }
+    }).catch(error => next(error))
 })
 
-
-
-
-// app.delete("/api/persons/:id", (req: Request, res: Response) => {
-//     const indexOfPersonToDelete = persons.findIndex(person => person.id === req.params.id)
-//     if (indexOfPersonToDelete > -1) {
-//         persons.splice(indexOfPersonToDelete, 1)
-//         return res.status(204).end()
-//     }
-//     else {
-//         return res.status(404).end()
-//     }
-// })
+app.delete('/api/persons/:id', (req: Request, res: Response, next: NextFunction) => {
+    Person.findByIdAndRemove(req.params.id)
+        .then(person => {
+            res.status(204).end()
+        })
+        .catch(error => next(error))
+})
 
 app.get("/api/persons", (req: Request, res: Response) => {
     Person.find({}).then(persons => {
@@ -81,11 +76,40 @@ app.post("/api/persons", (req: Request, res: Response) => {
     }
 })
 
-// app.get("/info", (req: Request, res: Response) => {
-//     return res.send(`PhoneBook has info for ${persons.length} people
 
-// ${new Date()}`)
-// })
+app.put('/api/persons/:id', (req: Request, res: Response, next: NextFunction) => {
+    const person = { name: req.body.name, number: req.body.number }
+    Person.findByIdAndUpdate(req.params.id, person, { new: true })
+        .then(updatedPerson => {
+            console.log("updatedPerson is", updatedPerson)
+            res.json(updatedPerson)
+        })
+        .catch(error => next(error))
+})
+
+app.get("/info", (_: Request, res: Response) => {
+    Person.find({}).then(persons => res.send(`PhoneBook has info for ${persons.length} people`))
+})
+
+
+const unknownEndpoint = (_: Request, res: Response) => {
+    res.status(404).send({ error: 'unknown endpoint' })
+}
+
+// handler of requests with unknown endpoint
+app.use(unknownEndpoint)
+
+const errorHandler = (error: Error, _: Request, response: Response, next: NextFunction) => {
+    console.error(error.message)
+
+    if (error.name === 'CastError') {
+        return response.status(400).send({ error: 'malformatted id' })
+    }
+
+    next(error)
+}
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT
 app.listen(PORT, () => {
