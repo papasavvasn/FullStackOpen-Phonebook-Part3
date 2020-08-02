@@ -54,12 +54,11 @@ app.delete('/api/persons/:id', (req: Request, res: Response, next: NextFunction)
 
 app.get("/api/persons", (req: Request, res: Response) => {
     Person.find({}).then(persons => {
-        console.log(persons)
         res.json(persons)
     })
 })
 
-app.post("/api/persons", (req: Request, res: Response) => {
+app.post("/api/persons", (req: Request, res: Response, next: NextFunction) => {
 
     if (!req.body.name || !req.body.number) {
         return res.status(400).json({
@@ -70,9 +69,9 @@ app.post("/api/persons", (req: Request, res: Response) => {
             name: req.body.name,
             number: req.body.number
         })
-        person.save().then(savedPerson => {
+        person.save({ validateBeforeSave: true }).then(savedPerson => {
             res.json(savedPerson)
-        })
+        }).catch(e => next(e))
     }
 })
 
@@ -81,7 +80,6 @@ app.put('/api/persons/:id', (req: Request, res: Response, next: NextFunction) =>
     const person = { name: req.body.name, number: req.body.number }
     Person.findByIdAndUpdate(req.params.id, person, { new: true })
         .then(updatedPerson => {
-            console.log("updatedPerson is", updatedPerson)
             res.json(updatedPerson)
         })
         .catch(error => next(error))
@@ -100,11 +98,13 @@ const unknownEndpoint = (_: Request, res: Response) => {
 app.use(unknownEndpoint)
 
 const errorHandler = (error: Error, _: Request, response: Response, next: NextFunction) => {
-    console.error(error.message)
 
     if (error.name === 'CastError') {
-        return response.status(400).send({ error: 'malformatted id' })
+        response.status(400).send({ error: 'malformatted id' })
+    } else if (error.name === 'ValidationError') {
+        response.status(400).json({ "error": (error as any).errors['number']?.message || (error as any).errors["name"]?.message })
     }
+
 
     next(error)
 }

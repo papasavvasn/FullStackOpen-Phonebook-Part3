@@ -6,7 +6,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 // with this tsconfig all the folders should be inside the src folder
 require('dotenv').config();
 var mongoose_1 = __importDefault(require("mongoose"));
+var mongoose_unique_validator_1 = __importDefault(require("mongoose-unique-validator"));
 mongoose_1.default.set('useFindAndModify', false);
+mongoose_1.default.set('useCreateIndex', true);
 var url = process.env.MONGODB_URI;
 console.log("url is", url);
 mongoose_1.default.connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -17,9 +19,10 @@ mongoose_1.default.connect(url, { useNewUrlParser: true, useUnifiedTopology: tru
     console.log('error connecting to MongoDB:', error.message);
 });
 var personSchema = new mongoose_1.default.Schema({
-    name: String,
-    number: String,
+    name: { type: String, minlength: 3, required: true, unique: true },
+    number: { type: String, minlength: 8 }
 });
+personSchema.plugin(mongoose_unique_validator_1.default);
 // TODO why is transform not working?
 personSchema.set('toJSON', {
     transform: function (document, returnedObject) {

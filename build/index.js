@@ -55,7 +55,7 @@ app.get("/api/persons", function (req, res) {
         res.json(persons);
     });
 });
-app.post("/api/persons", function (req, res) {
+app.post("/api/persons", function (req, res, next) {
     if (!req.body.name || !req.body.number) {
         return res.status(400).json({
             error: 'name or number missing'
@@ -68,17 +68,20 @@ app.post("/api/persons", function (req, res) {
         });
         person.save().then(function (savedPerson) {
             res.json(savedPerson);
-        });
+        }).catch(function (e) { return next(e); });
     }
 });
 app.put('/api/persons/:id', function (req, res, next) {
     var person = { name: req.body.name, number: req.body.number };
-    person_1.default.findByIdAndUpdate(req.params.id, person, { new: true })
+    person_1.default.findByIdAndUpdate(req.params.id, person, { new: true, runValidators: true })
         .then(function (updatedPerson) {
         console.log("updatedPerson is", updatedPerson);
         res.json(updatedPerson);
     })
-        .catch(function (error) { return next(error); });
+        .catch(function (error) {
+        console.log("error from backend is", error + "---------------");
+        next(error);
+    });
 });
 app.get("/info", function (_, res) {
     person_1.default.find({}).then(function (persons) { return res.send("PhoneBook has info for " + persons.length + " people"); });
@@ -92,6 +95,9 @@ var errorHandler = function (error, _, response, next) {
     console.error(error.message);
     if (error.name === 'CastError') {
         return response.status(400).send({ error: 'malformatted id' });
+    }
+    else if (error.name === 'ValidationError') {
+        return response.status(400).send(error.errors["name"].properties.message);
     }
     next(error);
 };
