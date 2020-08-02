@@ -7,8 +7,6 @@ mongoose.set('useCreateIndex', true)
 
 const url = process.env.MONGODB_URI as string
 
-console.log("url is", url)
-
 mongoose.connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(result => {
         console.log('connected to MongoDB')
@@ -23,7 +21,6 @@ const personSchema = new mongoose.Schema({
 })
 personSchema.plugin(uniqueValidator);
 
-// TODO why is transform not working?
 personSchema.set('toJSON', {
     transform: (document, returnedObject) => {
         returnedObject.id = returnedObject._id.toString()

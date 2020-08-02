@@ -51,7 +51,6 @@ app.delete('/api/persons/:id', function (req, res, next) {
 });
 app.get("/api/persons", function (req, res) {
     person_1.default.find({}).then(function (persons) {
-        console.log(persons);
         res.json(persons);
     });
 });
@@ -66,22 +65,18 @@ app.post("/api/persons", function (req, res, next) {
             name: req.body.name,
             number: req.body.number
         });
-        person.save().then(function (savedPerson) {
+        person.save({ validateBeforeSave: true }).then(function (savedPerson) {
             res.json(savedPerson);
         }).catch(function (e) { return next(e); });
     }
 });
 app.put('/api/persons/:id', function (req, res, next) {
     var person = { name: req.body.name, number: req.body.number };
-    person_1.default.findByIdAndUpdate(req.params.id, person, { new: true, runValidators: true })
+    person_1.default.findByIdAndUpdate(req.params.id, person, { new: true })
         .then(function (updatedPerson) {
-        console.log("updatedPerson is", updatedPerson);
         res.json(updatedPerson);
     })
-        .catch(function (error) {
-        console.log("error from backend is", error + "---------------");
-        next(error);
-    });
+        .catch(function (error) { return next(error); });
 });
 app.get("/info", function (_, res) {
     person_1.default.find({}).then(function (persons) { return res.send("PhoneBook has info for " + persons.length + " people"); });
@@ -92,12 +87,12 @@ var unknownEndpoint = function (_, res) {
 // handler of requests with unknown endpoint
 app.use(unknownEndpoint);
 var errorHandler = function (error, _, response, next) {
-    console.error(error.message);
+    var _a, _b;
     if (error.name === 'CastError') {
-        return response.status(400).send({ error: 'malformatted id' });
+        response.status(400).send({ error: 'malformatted id' });
     }
     else if (error.name === 'ValidationError') {
-        return response.status(400).send(error.errors["name"].properties.message);
+        response.status(400).json({ "error": ((_a = error.errors['number']) === null || _a === void 0 ? void 0 : _a.message) || ((_b = error.errors["name"]) === null || _b === void 0 ? void 0 : _b.message) });
     }
     next(error);
 };
