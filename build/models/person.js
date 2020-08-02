@@ -10,7 +10,6 @@ var mongoose_unique_validator_1 = __importDefault(require("mongoose-unique-valid
 mongoose_1.default.set('useFindAndModify', false);
 mongoose_1.default.set('useCreateIndex', true);
 var url = process.env.MONGODB_URI;
-console.log("url is", url);
 mongoose_1.default.connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(function (result) {
     console.log('connected to MongoDB');
@@ -23,7 +22,6 @@ var personSchema = new mongoose_1.default.Schema({
     number: { type: String, minlength: 8 }
 });
 personSchema.plugin(mongoose_unique_validator_1.default);
-// TODO why is transform not working?
 personSchema.set('toJSON', {
     transform: function (document, returnedObject) {
         returnedObject.id = returnedObject._id.toString();
