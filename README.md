@@ -1,7 +1,7 @@
 The app is deployed at:  https://fullstack-open-part-3.herokuapp.com/ 
 
 The code of the client is at: ../Parts_0-2/exercises/part2/phonebook
-or https://github.com/papasavvasn/FullStackOpenParts0-2
+or https://github.com/papasavvasn/FullStackOpenParts0-2/tree/master/exercises/part2
 
 You can run the app in dev mode with `npm run dev` or in normal local mode with `npm start`
 
